@@ -83,6 +83,20 @@ const Header = () => {
             <p>Tags</p>
           </Link>
 
+           {/* Show Create Event only if logged in */}
+          {session && (
+            <Link
+              href="/events/create-event"
+              className="flex items-center justify-center gap-2 hover:text-primary hover:scale-105 hover:underline-offset-8 hover:underline transition-all"
+            >
+              <div className="scale-110">
+                {/* You can use any icon you prefer here */}
+                <TfiTicket />
+              </div>
+              <p>Create Event</p>
+            </Link>
+          )}
+
           {session ? (
             <button
               onClick={() => {signOut()}}

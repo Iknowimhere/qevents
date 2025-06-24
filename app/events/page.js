@@ -1,37 +1,32 @@
-// import { NextFetchEvent } from "next/server"
-'use client';
-import { useEffect, useState } from "react";
 import EventCard from "@/components/EventCard";
-import { useSearchParams } from "next/navigation";
+import { Suspense } from 'react';
 
-const Events = () => {
-  const searchParams = useSearchParams();
-  const artist = searchParams.get("artist");
-  const tag = searchParams.get("tag");
-  const [data, setData] = useState([]);
+async function getEvents(searchParams) {
+  const res = await fetch("https://qevent-backend.labs.crio.do/events", { next: { revalidate: 3600 } });
+  let events = await res.json();
+  
+  const artist = searchParams?.artist;
+  const tag = searchParams?.tag;
+  
+  if (artist) {
+    events = events.filter(event => event.artist === artist);
+  }
+  if (tag) {
+    events = events.filter(event => event.tags?.includes(tag));
+  }
+  return events;
+}
 
-  useEffect(() => {
-    const fetchEvents = async () => {
-      let res = await fetch("https://qevent-backend.labs.crio.do/events");
-      let events = await res.json();
-      if (artist) {
-        events = events.filter(event => event.artist === artist);
-      }
-      if (tag) {
-        events = events.filter(event => event.tags?.includes(tag));
-      }
-      setData(events);
-    };
-    fetchEvents();
-  }, [artist]);
+export default async function Events({ searchParams }) {
+  const data = await getEvents(searchParams);
 
   return (
-    <div className="flex flex-wrap justify-center">
-      {data?.map(eventData => (
-        <EventCard eventData={eventData} key={eventData.id} />
-      ))}
-    </div>
+    <Suspense fallback={<div>Loading events...</div>}>
+      <div className="flex flex-wrap justify-center">
+        {data?.map(eventData => (
+          <EventCard eventData={eventData} key={eventData.id} />
+        ))}
+      </div>
+    </Suspense>
   );
-};
-
-export default Events;
+}
